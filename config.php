@@ -1,4 +1,10 @@
 <?php
+// 直接アクセス禁止
+if (count(get_included_files()) <= 1) {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 // Xサーバーのデータベース設定に合わせて変更すること
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'your_db_name');

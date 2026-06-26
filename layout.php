@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/auth.php';
+
 function layout_head(string $title): void {
     echo '<!DOCTYPE html>
 <html lang="ja">
