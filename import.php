@@ -15,6 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
         $errors[] = 'インポート先の校舎を選択してください。';
     } elseif ($_FILES['csv']['error'] !== UPLOAD_ERR_OK) {
         $errors[] = 'ファイルのアップロードに失敗しました。';
+    } elseif ($_FILES['csv']['size'] > 2 * 1024 * 1024) {
+        $errors[] = 'ファイルサイズが大きすぎます（上限 2MB）。';
     } else {
         $file    = $_FILES['csv']['tmp_name'];
         $handle  = fopen($file, 'r');
@@ -26,41 +28,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
 
         $count   = 0;
         $skipped = 0;
-        while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) !== count($headers)) { $skipped++; continue; }
-            $data = array_combine($headers, $row);
+        $stmt = $pdo->prepare(
+            'INSERT INTO items (school_id, code, category, name, maker, serial, purchased_at, location, set_count, is_disposed)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $pdo->beginTransaction();
+        try {
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($row) !== count($headers)) { $skipped++; continue; }
+                $data = array_combine($headers, $row);
 
-            // 廃棄フラグの変換
-            $is_disposed = 0;
-            if (isset($data['廃棄'])) {
-                $val = strtolower(trim($data['廃棄']));
-                $is_disposed = in_array($val, ['true', '1', 'yes', '廃棄'], true) ? 1 : 0;
+                // 廃棄フラグの変換
+                $is_disposed = 0;
+                if (isset($data['廃棄'])) {
+                    $val = strtolower(trim($data['廃棄']));
+                    $is_disposed = in_array($val, ['true', '1', 'yes', '廃棄'], true) ? 1 : 0;
+                }
+
+                // 購入日の変換（2024.9.7 → 2024-09-07）
+                $purchased_at = null;
+                if (!empty($data['購入日'])) {
+                    $d = preg_replace('/[.\\/]/', '-', trim($data['購入日']));
+                    $dt = date_create($d);
+                    if ($dt) $purchased_at = date_format($dt, 'Y-m-d');
+                }
+
+                $stmt->execute([
+                    $school_id,
+                    $data['番号']           ?? '',
+                    $data['種類']           ?? '',
+                    $data['機器名']         ?? '',
+                    $data['メーカー名']     ?? '',
+                    $data['製造番号']       ?? '',
+                    $purchased_at,
+                    $data['保管・使用場所'] ?? '',
+                    (int)($data['セット備品数'] ?? 0),
+                    $is_disposed,
+                ]);
+                $count++;
             }
-
-            // 購入日の変換（2024.9.7 → 2024-09-07）
-            $purchased_at = null;
-            if (!empty($data['購入日'])) {
-                $d = preg_replace('/[.\\/]/', '-', trim($data['購入日']));
-                $dt = date_create($d);
-                if ($dt) $purchased_at = date_format($dt, 'Y-m-d');
-            }
-
-            $pdo->prepare(
-                'INSERT INTO items (school_id, code, category, name, maker, serial, purchased_at, location, set_count, is_disposed)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            )->execute([
-                $school_id,
-                $data['番号']           ?? '',
-                $data['種類']           ?? '',
-                $data['機器名']         ?? '',
-                $data['メーカー名']     ?? '',
-                $data['製造番号']       ?? '',
-                $purchased_at,
-                $data['保管・使用場所'] ?? '',
-                (int)($data['セット備品数'] ?? 0),
-                $is_disposed,
-            ]);
-            $count++;
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $errors[] = 'インポート中にエラーが発生しました。データは保存されていません。';
+            fclose($handle);
+            goto render;
         }
         fclose($handle);
         log_operation(null, 'CSVインポート', $count . '件インポート（校舎ID:' . $school_id . '）');
@@ -68,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv'])) {
     }
 }
 
+render:
 layout_head('CSVインポート');
 layout_nav();
 ?>
