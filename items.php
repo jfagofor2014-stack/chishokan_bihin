@@ -87,7 +87,7 @@ layout_nav();
       </select>
     </div>
     <div>
-      <label class="block text-xs font-medium mb-1">キーワード（機器名・メーカー・番号）</label>
+      <label class="block text-xs font-medium mb-1">キーワード（機器名・メーカー・番号・製造番号）</label>
       <input type="text" name="keyword" value="<?= h($keyword) ?>"
              class="border rounded px-2 py-1 text-sm w-48" placeholder="DELL, ノートPC, ...">
     </div>
