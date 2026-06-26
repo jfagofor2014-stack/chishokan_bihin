@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS items (
   id           INT PRIMARY KEY AUTO_INCREMENT,
   school_id    INT NOT NULL,
   code         VARCHAR(50)  NOT NULL DEFAULT '',
-  category     VARCHAR(10)  NOT NULL DEFAULT '',
+  category     VARCHAR(50)  NOT NULL DEFAULT '',
   name         VARCHAR(100) NOT NULL DEFAULT '',
   maker        VARCHAR(100) NOT NULL DEFAULT '',
   serial       VARCHAR(100) NOT NULL DEFAULT '',
@@ -57,3 +57,13 @@ CREATE TABLE IF NOT EXISTS operation_logs (
   detail      TEXT         NULL,
   FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- インデックス
+CREATE INDEX idx_items_school_id ON items(school_id);
+CREATE INDEX idx_items_serial ON items(serial);
+CREATE INDEX idx_move_logs_item_id ON move_logs(item_id);
+CREATE INDEX idx_move_logs_from_school_id ON move_logs(from_school_id);
+CREATE INDEX idx_move_logs_to_school_id ON move_logs(to_school_id);
+CREATE INDEX idx_move_logs_moved_at ON move_logs(moved_at);
+CREATE INDEX idx_operation_logs_item_id ON operation_logs(item_id);
+CREATE INDEX idx_operation_logs_operated_at ON operation_logs(operated_at);
