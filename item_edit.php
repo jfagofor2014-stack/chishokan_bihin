@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'purchased_at' => trim($_POST['purchased_at'] ?? ''),
         'location'     => trim($_POST['location']     ?? ''),
         'set_count'    => trim($_POST['set_count']    ?? '0'),
-        'is_disposed'  => isset($_POST['is_disposed']) ? 1 : 0,
+        'is_disposed'  => isset($_POST['is_disposed']) ? '1' : '0',
     ];
 
     if ($values['school_id'] === 0) $errors[] = '校舎を選択してください。';
