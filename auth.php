@@ -35,7 +35,7 @@ function get_operator(): string {
     return $_SESSION['operator'] ?? '';
 }
 
-function log_operation(int|null $item_id, string $action, string $detail = ''): void {
+function log_operation(?int $item_id, string $action, string $detail = ''): void {
     $pdo = get_pdo();
     $stmt = $pdo->prepare(
         'INSERT INTO operation_logs (item_id, action, operator, detail) VALUES (?, ?, ?, ?)'
