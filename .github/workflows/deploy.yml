@@ -15,9 +15,12 @@ jobs:
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          printf '%s' "${{ secrets.XSERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.XSERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.XSERVER_SSH_PORT }} ${{ secrets.XSERVER_HOST }} >> ~/.ssh/known_hosts
+          echo "Host: ${{ secrets.XSERVER_HOST }}"
+          echo "Port: ${{ secrets.XSERVER_SSH_PORT }}"
+          ssh-keyscan -p ${{ secrets.XSERVER_SSH_PORT }} ${{ secrets.XSERVER_HOST }} >> ~/.ssh/known_hosts || echo "ssh-keyscan failed"
+          cat ~/.ssh/known_hosts | wc -l
 
       - name: Deploy via rsync
         run: |
