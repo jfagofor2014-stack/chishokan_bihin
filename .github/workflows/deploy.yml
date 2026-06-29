@@ -13,10 +13,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.XSERVER_SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.XSERVER_SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.XSERVER_SSH_PORT }} ${{ secrets.XSERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy via rsync
@@ -26,6 +29,6 @@ jobs:
             --exclude='.github/' \
             --exclude='db/schema.sql' \
             --exclude='config.php' \
-            -e "ssh -p ${{ secrets.XSERVER_SSH_PORT }} -i ~/.ssh/id_rsa" \
+            -e "ssh -p ${{ secrets.XSERVER_SSH_PORT }}" \
             ./ \
             ${{ secrets.XSERVER_USER }}@${{ secrets.XSERVER_HOST }}:${{ secrets.XSERVER_DEPLOY_PATH }}
