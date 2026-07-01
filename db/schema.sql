@@ -58,6 +58,16 @@ CREATE TABLE IF NOT EXISTS operation_logs (
   FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- 備品写真テーブル
+CREATE TABLE IF NOT EXISTS item_photos (
+  id          INT PRIMARY KEY AUTO_INCREMENT,
+  item_id     INT          NOT NULL,
+  filename    VARCHAR(255) NOT NULL,
+  uploaded_by VARCHAR(100) NOT NULL DEFAULT '',
+  uploaded_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- インデックス
 CREATE INDEX idx_items_school_id ON items(school_id);
 CREATE INDEX idx_items_serial ON items(serial);
@@ -67,3 +77,4 @@ CREATE INDEX idx_move_logs_to_school_id ON move_logs(to_school_id);
 CREATE INDEX idx_move_logs_moved_at ON move_logs(moved_at);
 CREATE INDEX idx_operation_logs_item_id ON operation_logs(item_id);
 CREATE INDEX idx_operation_logs_operated_at ON operation_logs(operated_at);
+CREATE INDEX idx_item_photos_item_id ON item_photos(item_id);

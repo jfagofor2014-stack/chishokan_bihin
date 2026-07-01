@@ -37,6 +37,13 @@ $oplogs = $pdo->prepare(
 $oplogs->execute([$id]);
 $op_logs = $oplogs->fetchAll();
 
+// 写真
+$photos_stmt = $pdo->prepare(
+    'SELECT * FROM item_photos WHERE item_id = ? ORDER BY uploaded_at DESC'
+);
+$photos_stmt->execute([$id]);
+$photos = $photos_stmt->fetchAll();
+
 layout_head('備品詳細');
 layout_nav();
 ?>
@@ -83,6 +90,50 @@ layout_nav();
         <dd><?php if ($item['checked']): ?>済（<?= h($item['checked_by']) ?> / <?= h((string)$item['checked_at']) ?>）<?php else: ?>未<?php endif; ?></dd>
       </div>
     </dl>
+  </div>
+
+  <!-- 写真 -->
+  <div class="bg-white rounded shadow p-5 mb-6">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-bold text-gray-700">写真（最新状態）</h3>
+      <a href="item_photo_upload.php?id=<?= $item['id'] ?>"
+         class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">＋写真を追加</a>
+    </div>
+    <?php if ($photos): ?>
+    <div class="mb-4">
+      <div class="relative inline-block">
+        <img src="uploads/items/<?= (int)$item['id'] ?>/<?= h($photos[0]['filename']) ?>"
+             class="max-w-full max-h-96 rounded border" alt="最新の写真">
+        <form method="post" action="item_photo_delete.php"
+              onsubmit="return confirm('この写真を削除しますか？');" class="absolute top-2 right-2">
+          <input type="hidden" name="photo_id" value="<?= $photos[0]['id'] ?>">
+          <button type="submit" class="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700">削除</button>
+        </form>
+      </div>
+      <p class="text-xs text-gray-500 mt-1">
+        <?= h((string)$photos[0]['uploaded_at']) ?> ・ <?= h($photos[0]['uploaded_by']) ?>
+      </p>
+    </div>
+    <?php if (count($photos) > 1): ?>
+    <p class="text-xs text-gray-500 mb-2">過去の写真</p>
+    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+      <?php foreach (array_slice($photos, 1) as $p): ?>
+      <div class="relative">
+        <img src="uploads/items/<?= (int)$item['id'] ?>/<?= h($p['filename']) ?>"
+             class="w-full h-20 object-cover rounded border">
+        <p class="text-[10px] text-gray-400 mt-0.5"><?= h(substr((string)$p['uploaded_at'], 0, 10)) ?></p>
+        <form method="post" action="item_photo_delete.php"
+              onsubmit="return confirm('この写真を削除しますか？');" class="absolute top-0 right-0">
+          <input type="hidden" name="photo_id" value="<?= $p['id'] ?>">
+          <button type="submit" class="bg-red-600 text-white text-xs w-5 h-5 rounded-full leading-none">×</button>
+        </form>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+    <?php else: ?>
+    <p class="text-gray-400 text-sm">写真はまだありません。</p>
+    <?php endif; ?>
   </div>
 
   <!-- 移動履歴 -->

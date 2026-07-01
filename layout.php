@@ -21,6 +21,7 @@ function layout_nav(): void {
   <div class="flex items-center gap-4 text-sm">
     <span>' . $operator . '</span>
     <a href="item_new.php" class="bg-white text-blue-700 px-3 py-1 rounded hover:bg-blue-50">＋新規登録</a>
+    <a href="schools.php" class="hover:underline">校舎管理</a>
     <a href="import.php" class="hover:underline">CSVインポート</a>
     <a href="logout.php" class="hover:underline">ログアウト</a>
   </div>
